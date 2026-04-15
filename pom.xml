@@ -84,7 +84,8 @@
 		<module>pitest-command-line</module>
 		<module>pitest-html-report</module>
 		<module>pitest-aggregator</module>
-	</modules>
+        <module>pitest-instrumenter</module>
+    </modules>
 
 	<profiles>
 		<profile>
