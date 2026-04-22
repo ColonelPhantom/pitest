@@ -5,18 +5,19 @@ import org.pitest.mutationtest.environment.TransformationPlugin;
 import org.pitest.util.Glob;
 
 import java.lang.instrument.ClassFileTransformer;
+import java.util.function.Predicate;
 
 public class JavassistTransformation implements TransformationPlugin {
 
     @Override
-    public ClassFileTransformer makeCoverageTransformer() {
+    public ClassFileTransformer makeCoverageTransformer(Predicate<String> sutFilter) {
         return new BendJavassistToMyWillTransformer(Prelude
                 .or(new Glob("javassist/*")),
                 JavassistInputStreamInterceptorAdapter.inputStreamAdapterSupplier(JavassistCoverageInterceptor.class));
     }
 
     @Override
-    public ClassFileTransformer makeMutationTransformer() {
+    public ClassFileTransformer makeMutationTransformer(Predicate<String> sutFilter) {
         return new BendJavassistToMyWillTransformer(Prelude
                 .or(new Glob("javassist/*")),
                 JavassistInputStreamInterceptorAdapter.inputStreamAdapterSupplier(JavassistInterceptor.class));

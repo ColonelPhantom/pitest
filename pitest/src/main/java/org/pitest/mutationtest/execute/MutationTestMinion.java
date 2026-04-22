@@ -177,7 +177,7 @@ public class MutationTestMinion {
   private static void enableTransformations() {
     ClientPluginServices plugins = ClientPluginServices.makeForContextLoader();
     for (TransformationPlugin each : plugins.findTransformations()) {
-      ClassFileTransformer transformer = each.makeMutationTransformer();
+      ClassFileTransformer transformer = each.makeMutationTransformer(null);
       if (transformer != null) {
         HotSwapAgent.addTransformer(transformer);
       }

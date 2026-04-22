@@ -51,9 +51,6 @@ public class CoverageMinion {
   private static final Logger LOG = Log.getLogger();
 
   public static void main(final String[] args) {
-
-    enableTransformations();
-
     ExitCode exitCode = ExitCode.OK;
     Socket s = null;
     CoveragePipe invokeQueue = null;
@@ -76,8 +73,12 @@ public class CoverageMinion {
 
       CodeCoverageStore.init(invokeQueue);
 
+      Predicate<String> filter = paramsFromParent.getFilter();
+
+      enableTransformations(filter);
+
       HotSwapAgent.addTransformer(new CoverageTransformer(
-          convertToJVMClassFilter(paramsFromParent.getFilter())));
+          convertToJVMClassFilter(filter)));
 
       final List<TestUnit> tus = getTestsFromParent(dis, paramsFromParent, invokeQueue);
 
@@ -121,10 +122,10 @@ public class CoverageMinion {
 
   }
 
-  private static void enableTransformations() {
+  private static void enableTransformations(Predicate<String> filter) {
     ClientPluginServices plugins = ClientPluginServices.makeForContextLoader();
     for (TransformationPlugin each : plugins.findTransformations()) {
-      ClassFileTransformer transformer = each.makeCoverageTransformer();
+      ClassFileTransformer transformer = each.makeCoverageTransformer(filter);
       if (transformer != null) {
         HotSwapAgent.addTransformer(transformer);
       }
