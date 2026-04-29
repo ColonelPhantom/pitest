@@ -75,10 +75,10 @@ public class CoverageMinion {
 
       Predicate<String> filter = paramsFromParent.getFilter();
 
-      enableTransformations(filter);
-
       HotSwapAgent.addTransformer(new CoverageTransformer(
           convertToJVMClassFilter(filter)));
+
+      enableTransformations(filter);
 
       final List<TestUnit> tus = getTestsFromParent(dis, paramsFromParent, invokeQueue);
 
