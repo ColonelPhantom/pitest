@@ -133,8 +133,8 @@ public class MutationTestMinion {
   public static void main(final String[] args) {
     LOG.fine(() -> "minion started");
 
-    enableTransformations();
     HotSwapAgent.addTransformer(new CatchNewClassLoadersTransformer());
+    enableTransformations();
 
     final int port = Integer.parseInt(args[0]);
 
