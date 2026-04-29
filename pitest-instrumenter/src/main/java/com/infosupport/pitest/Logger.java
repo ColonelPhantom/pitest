@@ -13,7 +13,10 @@ public class Logger {
     }
 
     public static void logCall(String clazz, String method, Object[] parameters) {
-        Thread.dumpStack();
+        if (out == null) {
+            System.out.println("Logger not initialized, cannot log call to " + clazz + "::" + method);
+            return;
+        }
 
         try {
             out.write((clazz + "::" + method).getBytes());

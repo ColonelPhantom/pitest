@@ -8,9 +8,8 @@ import org.pitest.reloc.asm.ClassVisitor;
 import org.pitest.reloc.asm.ClassWriter;
 import org.pitest.reloc.asm.MethodVisitor;
 
-import static com.infosupport.pitest.Logger.logCall;
-
 public class InstrumentationClassVisitor extends ClassVisitor {
+    private String clazz;
     private String methodToInstrument;
 
     public InstrumentationClassVisitor(ClassWriter cw, String methodToInstrument) {
@@ -23,14 +22,20 @@ public class InstrumentationClassVisitor extends ClassVisitor {
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         super.visit(version, access, name, signature, superName, interfaces);
+        this.clazz = name;
     }
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+        MethodVisitor methodVisitor = cv.visitMethod(access, name, descriptor, signature, exceptions);
+
         if (this.methodToInstrument == null || this.methodToInstrument.equals(name)) {
-            // There is no filter OR there is no equality check.
-            logCall(this.getClass().getName(), name, null);
+            System.out.println("InstrumentationMethodVisitor.visitMethod - " + name + " - " + descriptor + " - " + signature);
+            return new InstrumentationMethodVisitor(methodVisitor, clazz, name);
         }
-        return super.visitMethod(access, name, descriptor, signature, exceptions);
+
+        System.out.println("Skipping methodVisitor - " + name + " - " + descriptor + " - " + signature);
+
+        return methodVisitor;
     }
 }

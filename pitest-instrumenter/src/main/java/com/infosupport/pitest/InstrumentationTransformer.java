@@ -8,6 +8,7 @@ import org.pitest.reloc.asm.ClassVisitor;
 import org.pitest.reloc.asm.ClassWriter;
 
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
@@ -73,6 +74,18 @@ class InstrumentationTransformer implements ClassFileTransformer {
         byte[] result = cw.toByteArray();
         transformedClasses.add(ByteBuffer.wrap(result).asReadOnlyBuffer());
         System.out.println("Before: " + Arrays.hashCode(classfileBuffer) + ", after: " + Arrays.hashCode(result));
+
+        File outputDir = new File("instrumented-classes");
+        if (!outputDir.exists()) {
+            outputDir.mkdir();
+        }
+        try {
+            FileOutputStream out = new FileOutputStream(outputDir + "/" + className.replace("/", ".") + "-" + Arrays.hashCode(classfileBuffer) + ".class", false);
+            out.write(result);
+        } catch (IOException e) {
+            System.out.println("Failed to write transformed class " + e);
+        }
+        System.out.println("Transformed class " + className + " - size "  + result.length);
         return result;
     }
 }
