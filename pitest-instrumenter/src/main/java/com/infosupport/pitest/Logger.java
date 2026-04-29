@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class Logger {
     private static FileOutputStream out;
@@ -19,7 +20,31 @@ public class Logger {
         }
 
         try {
-            out.write((clazz + "::" + method).getBytes());
+            out.write((clazz + "::" + method + " args: " + Arrays.deepToString(parameters)).getBytes());
+            out.write("\n".getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void logReturn(String clazz, String method, Object returnValue) {
+        if (out == null) {
+            return;
+        }
+        try {
+            out.write((clazz + "::" + method + " return: " + (returnValue != null ? returnValue.toString() : "null")).getBytes());
+            out.write("\n".getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void logException(String clazz, String method, Throwable exception) {
+        if (out == null) {
+            return;
+        }
+        try {
+            out.write((clazz + "::" + method + " exception: " + (exception != null ? exception.toString() : "null")).getBytes());
             out.write("\n".getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -5,6 +5,7 @@ import org.pitest.mutationtest.environment.ResetEnvironment;
 import org.pitest.mutationtest.environment.TransformationPlugin;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
@@ -35,8 +36,12 @@ public class InstrumentationPlugin implements TransformationPlugin, EnvironmentR
             throw new RuntimeException("Filter is not set. Make sure to call updateConfig before using the transformer");
         }
 
-        File oldlog = new File("pitest-instrumenter.log");
-        if (oldlog.exists()) { oldlog.delete(); }
+        try {
+            Logger.setOutput(new FileOutputStream("instrumentation-clean.log", false));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         instrumenter = new InstrumentationTransformer(false, convertToJVMClassFilter(filter));
         return instrumenter;
     }
@@ -45,11 +50,6 @@ public class InstrumentationPlugin implements TransformationPlugin, EnvironmentR
     public ClassFileTransformer makeMutationTransformer(Predicate<String> filter) {
         if (instrumenter != null) {
             throw new IllegalStateException("Trying to create two instrumenters in one JVM!");
-        }
-
-        File oldlog = new File("pitest-instrumenter-mut.log");
-        if (oldlog.exists()) {
-            oldlog.delete();
         }
 
         instrumenter = new InstrumentationTransformer(true, filter != null ? convertToJVMClassFilter(filter) : null);

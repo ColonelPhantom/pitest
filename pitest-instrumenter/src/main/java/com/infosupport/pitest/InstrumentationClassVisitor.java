@@ -31,7 +31,7 @@ public class InstrumentationClassVisitor extends ClassVisitor {
 
         if (this.methodToInstrument == null || this.methodToInstrument.equals(name)) {
             System.out.println("InstrumentationMethodVisitor.visitMethod - " + name + " - " + descriptor + " - " + signature);
-            return new InstrumentationMethodVisitor(methodVisitor, clazz, name);
+            return new InstrumentationMethodVisitor(methodVisitor, clazz, access, name, descriptor);
         }
 
         System.out.println("Skipping methodVisitor - " + name + " - " + descriptor + " - " + signature);
