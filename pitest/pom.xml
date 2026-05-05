@@ -87,6 +87,8 @@
 							<artifactSet>
 								<includes>
 									<include>org.ow2.asm:*</include>
+									<include>com.thoughtworks.xstream:*</include>
+									<include>xmlpull:xmlpull</include>
 								</includes>
 							</artifactSet>
 
@@ -99,6 +101,15 @@
 									<pattern>org.objectweb.asm</pattern>
 									<shadedPattern>org.pitest.reloc.asm</shadedPattern>
 								</relocation>
+								<relocation>
+									<pattern>com.thoughtworks.xstream</pattern>
+									<shadedPattern>org.pitest.reloc.xstream</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.xmlpull</pattern>
+									<shadedPattern>org.pitest.reloc.xmlpull</shadedPattern>
+								</relocation>
+
 							</relocations>
 						</configuration>
 					</execution>
@@ -202,7 +213,11 @@
 			<scope>test</scope>
 		</dependency>
 
-
+		<dependency>
+			<groupId>com.thoughtworks.xstream</groupId>
+			<artifactId>xstream</artifactId>
+			<version>1.4.21</version>
+		</dependency>
 	</dependencies>
 
 </project>

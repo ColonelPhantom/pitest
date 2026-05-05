@@ -1,13 +1,14 @@
 package com.infosupport.pitest;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import org.pitest.reloc.xstream.XStream;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
 public class Logger {
     private static FileOutputStream out;
+    private final static XStream xstream = new XStream();
 
     public static void setOutput(final FileOutputStream out) {
         Logger.out = out;
@@ -22,6 +23,7 @@ public class Logger {
         try {
             out.write((clazz + "::" + method + " args: " + Arrays.deepToString(parameters)).getBytes());
             out.write("\n".getBytes());
+            xstream.toXML(parameters, out);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -34,6 +36,7 @@ public class Logger {
         try {
             out.write((clazz + "::" + method + " return: " + (returnValue != null ? returnValue.toString() : "null")).getBytes());
             out.write("\n".getBytes());
+            xstream.toXML(returnValue, out);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -46,6 +49,7 @@ public class Logger {
         try {
             out.write((clazz + "::" + method + " exception: " + (exception != null ? exception.toString() : "null")).getBytes());
             out.write("\n".getBytes());
+            xstream.toXML(exception, out);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
