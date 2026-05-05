@@ -4,7 +4,6 @@ import org.pitest.reloc.xstream.XStream;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 public class Logger {
     private static FileOutputStream out;
@@ -21,9 +20,14 @@ public class Logger {
         }
 
         try {
-            out.write((clazz + "::" + method + " args: " + Arrays.deepToString(parameters)).getBytes());
-            out.write("\n".getBytes());
-            xstream.toXML(parameters, out);
+            out.write(("<methodCall class=\"" + clazz + "\" method=\"" + method + "\">\n").getBytes());
+            out.write(("<args>\n").getBytes());
+            for (Object parameter : parameters) {
+                xstream.toXML(parameter, out);
+                out.write("\n".getBytes());
+            }
+            out.write(("</args>\n").getBytes());
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -34,9 +38,9 @@ public class Logger {
             return;
         }
         try {
-            out.write((clazz + "::" + method + " return: " + (returnValue != null ? returnValue.toString() : "null")).getBytes());
-            out.write("\n".getBytes());
+            out.write("<return>\n".getBytes());
             xstream.toXML(returnValue, out);
+            out.write(("\n</return>\n</methodCall>\n").getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -47,9 +51,9 @@ public class Logger {
             return;
         }
         try {
-            out.write((clazz + "::" + method + " exception: " + (exception != null ? exception.toString() : "null")).getBytes());
-            out.write("\n".getBytes());
+            out.write("<except>\n".getBytes());
             xstream.toXML(exception, out);
+            out.write(("\n</except>\n</methodCall>\n").getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
