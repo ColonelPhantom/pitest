@@ -65,4 +65,22 @@ public class Logger {
             throw new RuntimeException(e);
         }
     }
+
+    public static void startTest(String testName) {
+        if (out == null) return;
+        try {
+            out.write(("<test name=\"" + testName + "\">\n").getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void endTest() {
+        if (out == null) return;
+        try {
+            out.write("</test>\n".getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
