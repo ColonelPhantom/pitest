@@ -48,7 +48,7 @@ public class InstrumentationPlugin implements TransformationPlugin, EnvironmentR
         mkdir("cov-classes");
 
         try {
-            Logger.setOutput(new FileOutputStream("target/pit-instrument/clean.log", false));
+            Logger.setOutput(new FileOutputStream("target/pit-instrument/clean-log.xml", false));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }

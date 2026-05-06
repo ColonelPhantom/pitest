@@ -52,7 +52,7 @@ class InstrumentationTransformer implements ClassFileTransformer {
         // create output files
         InstrumentationPlugin.mkdir("mutants/" + this.mutantId);
         try {
-            File logFile = new File(basePath() + "instrument.log");
+            File logFile = new File(basePath() + "instrument-log.xml");
             FileOutputStream out = new FileOutputStream(logFile, false);
             Logger.setOutput(out);
         } catch (IOException e) {

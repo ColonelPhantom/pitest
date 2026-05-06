@@ -14,13 +14,13 @@ public class InstrumentationMethodVisitor extends AdviceAdapter {
     private static final String LOGGER_OWNER = "com/infosupport/pitest/Logger";
 
     private static final String LOGGER_CALL_METHOD_NAME = "logCall";
-    private static final String LOGGER_CALL_METHOD_DESC = "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)V";
+    private static final String LOGGER_CALL_METHOD_DESC = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;[Ljava/lang/Object;)V";
 
     private static final String LOGGER_RETURN_METHOD_NAME = "logReturn";
-    private static final String LOGGER_RETURN_METHOD_DESC = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V";
+    private static final String LOGGER_RETURN_METHOD_DESC = "(Ljava/lang/Object;Ljava/lang/Object;)V";
 
     private static final String LOGGER_EXCEPTION_METHOD_NAME = "logException";
-    private static final String LOGGER_EXCEPTION_METHOD_DESC = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V";
+    private static final String LOGGER_EXCEPTION_METHOD_DESC = "(Ljava/lang/Object;Ljava/lang/Throwable;)V";
 
     private Label startLabel = new Label();
     private Label endLabel = new Label();
@@ -46,6 +46,11 @@ public class InstrumentationMethodVisitor extends AdviceAdapter {
         methodEntered = true;
         super.visitLdcInsn(clazz);
         super.visitLdcInsn(method);
+        if ((this.getAccess() & Opcodes.ACC_STATIC) != 0) {
+            super.visitInsn(Opcodes.ACONST_NULL);
+        } else {
+            super.visitVarInsn(Opcodes.ALOAD, 0);
+        }
         super.loadArgArray();
         super.visitMethodInsn(Opcodes.INVOKESTATIC, LOGGER_OWNER, LOGGER_CALL_METHOD_NAME, LOGGER_CALL_METHOD_DESC, false);
 
@@ -68,9 +73,11 @@ public class InstrumentationMethodVisitor extends AdviceAdapter {
                 }
                 super.box(Type.getReturnType(methodDesc));
 
-                super.visitLdcInsn(clazz);
-                super.swap();
-                super.visitLdcInsn(method);
+                if ((this.getAccess() & Opcodes.ACC_STATIC) != 0) {
+                    super.visitInsn(Opcodes.ACONST_NULL);
+                } else {
+                    super.visitVarInsn(Opcodes.ALOAD, 0);
+                }
                 super.swap();
 
                 super.visitMethodInsn(Opcodes.INVOKESTATIC, LOGGER_OWNER, LOGGER_RETURN_METHOD_NAME, LOGGER_RETURN_METHOD_DESC, false);
@@ -87,10 +94,14 @@ public class InstrumentationMethodVisitor extends AdviceAdapter {
         mv.visitLabel(endLabel);
         mv.visitLabel(handlerLabel);
         mv.visitInsn(Opcodes.DUP);
-        mv.visitLdcInsn(clazz);
-        mv.visitInsn(Opcodes.SWAP);
-        mv.visitLdcInsn(method);
-        mv.visitInsn(Opcodes.SWAP);
+
+        if ((this.getAccess() & Opcodes.ACC_STATIC) != 0) {
+            super.visitInsn(Opcodes.ACONST_NULL);
+        } else {
+            super.visitVarInsn(Opcodes.ALOAD, 0);
+        }
+        super.swap();
+
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, LOGGER_OWNER, LOGGER_EXCEPTION_METHOD_NAME, LOGGER_EXCEPTION_METHOD_DESC, false);
         mv.visitInsn(Opcodes.ATHROW);
 

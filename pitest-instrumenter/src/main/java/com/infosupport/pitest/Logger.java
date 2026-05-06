@@ -20,7 +20,7 @@ public class Logger {
         Logger.out = out;
     }
 
-    public static void logCall(String clazz, String method, Object[] parameters) {
+    public static void logCall(String clazz, String method, Object self, Object[] parameters) {
         if (out == null) {
             System.out.println("Logger not initialized, cannot log call to " + clazz + "::" + method);
             return;
@@ -28,6 +28,9 @@ public class Logger {
 
         try {
             out.write(("<methodCall class=\"" + clazz + "\" method=\"" + method + "\">\n").getBytes());
+            out.write(("<self>\n").getBytes());
+            xstream.toXML(self, out);
+            out.write(("\n</self>\n").getBytes());
             out.write(("<args>\n").getBytes());
             for (Object parameter : parameters) {
                 xstream.toXML(parameter, out);
@@ -40,27 +43,31 @@ public class Logger {
         }
     }
 
-    public static void logReturn(String clazz, String method, Object returnValue) {
+    public static void logReturn(Object self, Object returnValue) {
         if (out == null) {
             return;
         }
         try {
             out.write("<return>\n".getBytes());
             xstream.toXML(returnValue, out);
-            out.write(("\n</return>\n</methodCall>\n").getBytes());
+            out.write(("\n</return>\n<selfAfter>\n").getBytes());
+            xstream.toXML(self, out);
+            out.write(("\n</selfAfter>\n</methodCall>\n").getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void logException(String clazz, String method, Throwable exception) {
+    public static void logException(Object self, Throwable exception) {
         if (out == null) {
             return;
         }
         try {
             out.write("<except>\n".getBytes());
             xstream.toXML(exception, out);
-            out.write(("\n</except>\n</methodCall>\n").getBytes());
+            out.write(("\n</except>\n<selfAfter>\n").getBytes());
+            xstream.toXML(self, out);
+            out.write(("\n</selfAfter>\n</methodCall>\n").getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
