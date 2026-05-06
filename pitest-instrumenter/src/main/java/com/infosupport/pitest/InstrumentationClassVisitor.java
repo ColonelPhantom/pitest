@@ -1,8 +1,5 @@
 package com.infosupport.pitest;
 
-//import org.objectweb.asm.ClassVisitor;
-//import org.objectweb.asm.ClassWriter;
-//import org.objectweb.asm.MethodVisitor;
 import org.pitest.bytecode.ASMVersion;
 import org.pitest.reloc.asm.ClassVisitor;
 import org.pitest.reloc.asm.ClassWriter;
@@ -15,8 +12,6 @@ public class InstrumentationClassVisitor extends ClassVisitor {
     public InstrumentationClassVisitor(ClassWriter cw, String methodToInstrument) {
         super(ASMVersion.ASM_VERSION, cw);
         this.methodToInstrument = methodToInstrument;
-
-        System.out.println("Instrumentation ClassVisitor: " + cw.getClass().getName() + "::" + methodToInstrument);
     }
 
     @Override
@@ -30,12 +25,9 @@ public class InstrumentationClassVisitor extends ClassVisitor {
         MethodVisitor methodVisitor = cv.visitMethod(access, name, descriptor, signature, exceptions);
 
         if (this.methodToInstrument == null || this.methodToInstrument.equals(name)) {
-            System.out.println("InstrumentationMethodVisitor.visitMethod - " + name + " - " + descriptor + " - " + signature);
             return new InstrumentationMethodVisitor(methodVisitor, clazz, access, name, descriptor);
+        } else {
+            return methodVisitor;
         }
-
-        System.out.println("Skipping methodVisitor - " + name + " - " + descriptor + " - " + signature);
-
-        return methodVisitor;
     }
 }

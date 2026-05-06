@@ -1,8 +1,7 @@
 package com.infosupport.pitest;
 
-//import org.objectweb.asm.ClassReader;
-//import org.objectweb.asm.ClassVisitor;
-//import org.objectweb.asm.ClassWriter;
+import org.pitest.mutationtest.engine.Mutant;
+import org.pitest.mutationtest.engine.MutationDetails;
 import org.pitest.reloc.asm.ClassReader;
 import org.pitest.reloc.asm.ClassVisitor;
 import org.pitest.reloc.asm.ClassWriter;
@@ -12,46 +11,61 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
-import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Predicate;
 
 class InstrumentationTransformer implements ClassFileTransformer {
-    private boolean isMutant = false;
     private Predicate<String> classFilter;
     private String methodFilter;
-    private Set<ByteBuffer> transformedClasses;
+    private String mutantId;
 
-    public InstrumentationTransformer(boolean isMutant, Predicate<String> sutFilter) {
-        this.isMutant = isMutant;
-        this.classFilter = sutFilter;
-        transformedClasses = new HashSet<>();
+    private String basePath() {
+        if (this.mutantId != null) {
+            return "target/pit-instrument/mutants/" + this.mutantId + "/";
+        } else {
+            return "target/pit-instrument/cov-classes/";
+        }
     }
 
-    public void setMethod(Predicate<String> classFilter, String methodFilter) {
-        this.classFilter = classFilter;
-        this.methodFilter = methodFilter;
+    public InstrumentationTransformer(Predicate<String> sutFilter) {
+        this.classFilter = sutFilter;
+    }
+
+    public void setMutant(Mutant newMutant) {
+        // collect all metadata
+        MutationDetails details = newMutant.getDetails();
+        String clazz = details.getClassName().asJavaName();
+        String method = details.getMethod();
+
+        // set filters
+        this.classFilter = Predicate.isEqual(clazz);
+        this.methodFilter = method;
+
+        System.out.println("Setting mutant in " + clazz + "::" + method);
+
+        // calculate hash
+        this.mutantId = MutantHash.hash(details);
+
+        System.out.println("idStr: " + this.mutantId + " (" + MutantHash.idString(details) + ")\n");
+
+        // create output files
+        InstrumentationPlugin.mkdir("mutants/" + this.mutantId);
+        try {
+            File logFile = new File(basePath() + "instrument.log");
+            FileOutputStream out = new FileOutputStream(logFile, false);
+            Logger.setOutput(out);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public byte[] transform(ClassLoader loader,
                             String className, Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain,
-                            byte[] classfileBuffer) throws IllegalClassFormatException {
-        if (classFilter == null) {
-//            System.out.println("Not initialized yet; skipping " + className);
-            return null;
-        }
-        if (!classFilter.test(className.replace("/", "."))) {
-//            System.out.println("Skipping class " + className);
-            return null;
-        }
-        if (transformedClasses.contains(ByteBuffer.wrap(classfileBuffer).asReadOnlyBuffer())) {
-            System.out.println("Already transformed class " + className);
+                            byte[] classfileBuffer) {
+        if (classFilter == null || !classFilter.test(className.replace("/", "."))) {
             return null;
         }
 
@@ -64,7 +78,6 @@ class InstrumentationTransformer implements ClassFileTransformer {
             ClassVisitor cv = new InstrumentationClassVisitor(cw, methodFilter);
             cr.accept(cv, ClassReader.EXPAND_FRAMES);
             result = cw.toByteArray();
-            transformedClasses.add(ByteBuffer.wrap(result).asReadOnlyBuffer());
             System.out.println("Before: " + Arrays.hashCode(classfileBuffer) + ", after: " + Arrays.hashCode(result));
         } catch (Throwable e) {
             System.out.println("Transforming class " + className + " failed: " + e.getMessage());
@@ -72,13 +85,10 @@ class InstrumentationTransformer implements ClassFileTransformer {
             throw e;
         }
 
-        File outputDir = new File("instrumented-classes");
-        if (!outputDir.exists()) {
-            outputDir.mkdir();
-        }
         try {
-            FileOutputStream out = new FileOutputStream(outputDir + "/" + className.replace("/", ".") + "-" + Arrays.hashCode(classfileBuffer) + ".class", false);
+            FileOutputStream out = new FileOutputStream(basePath() + className.replace("/", ".") + ".class", false);
             out.write(result);
+            out.close();
         } catch (IOException e) {
             System.out.println("Failed to write transformed class " + e);
         }

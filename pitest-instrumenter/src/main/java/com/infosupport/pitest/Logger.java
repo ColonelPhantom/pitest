@@ -10,6 +10,13 @@ public class Logger {
     private final static XStream xstream = new XStream();
 
     public static void setOutput(final FileOutputStream out) {
+        if (Logger.out != null) {
+            try {
+                Logger.out.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
         Logger.out = out;
     }
 
