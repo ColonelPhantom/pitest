@@ -1,5 +1,6 @@
-package com.infosupport.pitest;
+package com.infosupport.pitest.instrument;
 
+import com.infosupport.pitest.Logger;
 import org.pitest.mutationtest.environment.EnvironmentResetPlugin;
 import org.pitest.mutationtest.environment.ResetEnvironment;
 import org.pitest.mutationtest.environment.TransformationPlugin;

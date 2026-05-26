@@ -4,6 +4,8 @@ import org.pitest.reloc.xstream.XStream;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class Logger {
     private static FileOutputStream out;
@@ -20,6 +22,39 @@ public class Logger {
         Logger.out = out;
     }
 
+    private static String escapeXml(String input) {
+        if (input == null) return "";
+        return input.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace("\"", "&quot;")
+                    .replace("'", "&apos;");
+    }
+
+    private static String getSha256Hash(String data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(data.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void writeObject(String nodeName, Object obj) throws IOException {
+        String xml = xstream.toXML(obj);
+        String hash = getSha256Hash(xml);
+        out.write(("<" + nodeName + " hash=\"" + hash + "\">\n").getBytes());
+        out.write(xml.getBytes());
+        out.write(("\n</" + nodeName + ">\n").getBytes());
+    }
+
     public static void logCall(String clazz, String method, Object self, Object[] parameters) {
         if (out == null) {
             System.out.println("Logger not initialized, cannot log call to " + clazz + "::" + method);
@@ -27,16 +62,11 @@ public class Logger {
         }
 
         try {
-            out.write(("<methodCall class=\"" + clazz + "\" method=\"" + method + "\">\n").getBytes());
-            out.write(("<self>\n").getBytes());
-            xstream.toXML(self, out);
-            out.write(("\n</self>\n").getBytes());
-            out.write(("<args>\n").getBytes());
+            out.write(("<methodCall class=\"" + escapeXml(clazz) + "\" method=\"" + escapeXml(method) + "\">\n").getBytes());
+            writeObject("self", self);
             for (Object parameter : parameters) {
-                xstream.toXML(parameter, out);
-                out.write("\n".getBytes());
+                writeObject("arg", parameter);
             }
-            out.write(("</args>\n").getBytes());
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -48,11 +78,9 @@ public class Logger {
             return;
         }
         try {
-            out.write("<return>\n".getBytes());
-            xstream.toXML(returnValue, out);
-            out.write(("\n</return>\n<selfAfter>\n").getBytes());
-            xstream.toXML(self, out);
-            out.write(("\n</selfAfter>\n</methodCall>\n").getBytes());
+            writeObject("return", returnValue);
+            writeObject("selfAfter", self);
+            out.write(("</methodCall>\n").getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -63,11 +91,9 @@ public class Logger {
             return;
         }
         try {
-            out.write("<except>\n".getBytes());
-            xstream.toXML(exception, out);
-            out.write(("\n</except>\n<selfAfter>\n").getBytes());
-            xstream.toXML(self, out);
-            out.write(("\n</selfAfter>\n</methodCall>\n").getBytes());
+            writeObject("except", exception);
+            writeObject("selfAfter", self);
+            out.write(("</methodCall>\n").getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -76,7 +102,7 @@ public class Logger {
     public static void startTest(String testName) {
         if (out == null) return;
         try {
-            out.write(("<test name=\"" + testName + "\">\n").getBytes());
+            out.write(("<test name=\"" + escapeXml(testName) + "\">\n").getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

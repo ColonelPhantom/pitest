@@ -1,5 +1,7 @@
-package com.infosupport.pitest;
+package com.infosupport.pitest.instrument;
 
+import com.infosupport.pitest.Logger;
+import com.infosupport.pitest.MutantHash;
 import org.pitest.mutationtest.engine.Mutant;
 import org.pitest.mutationtest.engine.MutationDetails;
 import org.pitest.reloc.asm.ClassReader;

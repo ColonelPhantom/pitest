@@ -1,4 +1,4 @@
-package com.infosupport.pitest;
+package com.infosupport.pitest.instrument;
 
 import org.pitest.bytecode.ASMVersion;
 import org.pitest.reloc.asm.MethodVisitor;
@@ -9,8 +9,8 @@ import org.pitest.reloc.asm.commons.AdviceAdapter;
 
 
 public class InstrumentationMethodVisitor extends AdviceAdapter {
-    private String clazz;
-    private String method;
+    private final String clazz;
+    private final String method;
     private static final String LOGGER_OWNER = "com/infosupport/pitest/Logger";
 
     private static final String LOGGER_CALL_METHOD_NAME = "logCall";
@@ -22,9 +22,9 @@ public class InstrumentationMethodVisitor extends AdviceAdapter {
     private static final String LOGGER_EXCEPTION_METHOD_NAME = "logException";
     private static final String LOGGER_EXCEPTION_METHOD_DESC = "(Ljava/lang/Object;Ljava/lang/Throwable;)V";
 
-    private Label startLabel = new Label();
-    private Label endLabel = new Label();
-    private Label handlerLabel = new Label();
+    private final Label startLabel = new Label();
+    private final Label endLabel = new Label();
+    private final Label handlerLabel = new Label();
 
     private boolean methodEntered = false;
 
@@ -61,8 +61,11 @@ public class InstrumentationMethodVisitor extends AdviceAdapter {
     protected void onMethodExit(int opcode) {
         if (opcode != Opcodes.ATHROW) {
             if (opcode == Opcodes.RETURN) {
-                super.visitLdcInsn(clazz);
-                super.visitLdcInsn(method);
+                if ((this.getAccess() & Opcodes.ACC_STATIC) != 0) {
+                    super.visitInsn(Opcodes.ACONST_NULL);
+                } else {
+                    super.visitVarInsn(Opcodes.ALOAD, 0);
+                }
                 super.visitInsn(Opcodes.ACONST_NULL);
                 super.visitMethodInsn(Opcodes.INVOKESTATIC, LOGGER_OWNER, LOGGER_RETURN_METHOD_NAME, LOGGER_RETURN_METHOD_DESC, false);
             } else {

@@ -1,4 +1,4 @@
-package com.infosupport.pitest;
+package com.infosupport.pitest.instrument;
 
 import org.pitest.bytecode.ASMVersion;
 import org.pitest.reloc.asm.ClassVisitor;
@@ -7,7 +7,7 @@ import org.pitest.reloc.asm.MethodVisitor;
 
 public class InstrumentationClassVisitor extends ClassVisitor {
     private String clazz;
-    private String methodToInstrument;
+    private final String methodToInstrument;
 
     public InstrumentationClassVisitor(ClassWriter cw, String methodToInstrument) {
         super(ASMVersion.ASM_VERSION, cw);

@@ -1,4 +1,4 @@
-package com.infosupport.pitest;
+package com.infosupport.pitest.trace;
 
 import org.pitest.help.PitHelpError;
 import org.pitest.testapi.Configuration;

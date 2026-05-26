@@ -1,5 +1,6 @@
-package com.infosupport.pitest;
+package com.infosupport.pitest.trace;
 
+import com.infosupport.pitest.Logger;
 import org.pitest.testapi.Description;
 import org.pitest.testapi.ResultCollector;
 import org.pitest.testapi.TestUnit;

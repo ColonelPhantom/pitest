@@ -1,10 +1,10 @@
-package com.infosupport.pitest;
+package com.infosupport.pitest.instrument;
 
 import org.pitest.mutationtest.engine.Mutant;
 import org.pitest.mutationtest.environment.ResetEnvironment;
 
 public class InstrumentationResetter implements ResetEnvironment {
-    private InstrumentationTransformer instrumenter;
+    private final InstrumentationTransformer instrumenter;
 
     public InstrumentationResetter(InstrumentationTransformer instrumenter) {
         this.instrumenter = instrumenter;
