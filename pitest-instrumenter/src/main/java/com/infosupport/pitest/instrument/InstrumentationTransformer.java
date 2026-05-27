@@ -44,12 +44,12 @@ class InstrumentationTransformer implements ClassFileTransformer {
         this.classFilter = Predicate.isEqual(clazz);
         this.methodFilter = method;
 
-        System.out.println("Setting mutant in " + clazz + "::" + method);
+        System.err.println("Setting mutant in " + clazz + "::" + method);
 
         // calculate hash
         this.mutantId = MutantHash.hash(details);
 
-        System.out.println("idStr: " + this.mutantId + " (" + MutantHash.idString(details) + ")\n");
+        System.err.println("idStr: " + this.mutantId + " (" + MutantHash.idString(details) + ")\n");
 
         // create output files
         InstrumentationPlugin.mkdir("mutants/" + this.mutantId);

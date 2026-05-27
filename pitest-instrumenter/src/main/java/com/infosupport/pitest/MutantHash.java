@@ -27,9 +27,8 @@ public final class MutantHash {
         int lineNumber = details.getLineNumber();
         String mutator = details.getMutator();
         java.util.List<Integer> indexes = details.getId().getIndexes();
-        java.util.List<Integer> blocks = details.getBlocks();
 
-        return clazz + "-" + method + "-" + methodDescription + "-" + lineNumber + "-" + mutator + "-" + indexes + "-" + blocks;
+        return clazz + "-" + method + "-" + methodDescription + "-" + lineNumber + "-" + mutator + "-" + indexes;
     }
 
     private static String hashIdString(String idStr) {

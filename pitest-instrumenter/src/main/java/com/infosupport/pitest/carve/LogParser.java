@@ -8,6 +8,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamReader;
 import java.io.*;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -95,17 +96,31 @@ public class LogParser {
     }
 
     public Map<String, TestRun> parseLogFile(File xmlFile) {
-        Map<String, TestRun> testRuns = new LinkedHashMap<>();
-        if (!xmlFile.exists()) return testRuns;
+        return parseLogFiles(java.util.Collections.singletonList(xmlFile));
+    }
 
-        try (FileInputStream fis = new FileInputStream(xmlFile);
-             InputStream combinedStream = new SequenceInputStream(
-                     new ByteArrayInputStream("<roots>".getBytes()),
-                     new SequenceInputStream(
-                             fis,
-                             new ByteArrayInputStream("</roots>".getBytes())
-                     )
-             )) {
+    public Map<String, TestRun> parseLogFiles(Collection<File> xmlFiles) {
+        Map<String, TestRun> testRuns = new LinkedHashMap<>();
+
+        InputStream combinedStream = new SequenceInputStream(
+                new ByteArrayInputStream("<?xml version=\"1.1\" encoding=\"UTF-8\"?>\n<roots>\n".getBytes()),
+                new SequenceInputStream(
+                        xmlFiles.stream()
+                                .filter(File::exists)
+                                .map(file -> {
+                                    try {
+                                        return (InputStream)new FileInputStream(file);
+                                    } catch (FileNotFoundException e) {
+                                        throw new RuntimeException("File not found: " + file, e);
+                                    }
+                                })
+                                .reduce((a, b) -> new SequenceInputStream(a, b))
+                                .orElse(new ByteArrayInputStream(new byte[0])),
+                        new ByteArrayInputStream("</roots>".getBytes())
+                )
+        );
+
+        try {
             XMLInputFactory factory = XMLInputFactory.newInstance();
             XMLStreamReader reader = factory.createXMLStreamReader(combinedStream);
 
@@ -159,7 +174,7 @@ public class LogParser {
             }
             reader.close();
         } catch (Exception e) {
-            throw new RuntimeException("Error parsing log file: " + xmlFile, e);
+            throw new RuntimeException("Error parsing log file(s): " + xmlFiles, e);
         }
         return testRuns;
     }
