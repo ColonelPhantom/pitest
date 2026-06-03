@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
@@ -44,11 +45,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static org.pitest.util.Unchecked.translateCheckedException;
-
 public class CoverageMinion {
 
   private static final Logger LOG = Log.getLogger();
+  private static final Collection<TransformationPlugin> TRANSFORMATION_PLUGINS = ClientPluginServices.makeForContextLoader().findTransformations();
 
   public static void main(final String[] args) {
     ExitCode exitCode = ExitCode.OK;
@@ -106,15 +106,19 @@ public class CoverageMinion {
           ex);
       exitCode = ExitCode.UNKNOWN_ERROR;
     } finally {
-      if (invokeQueue != null) {
-        invokeQueue.end(exitCode);
+      try {
+        notifyCoverageFinished();
+      } finally {
+        if (invokeQueue != null) {
+          invokeQueue.end(exitCode);
+        }
       }
       try {
         if (s != null) {
           s.close();
         }
       } catch (final IOException e) {
-        throw translateCheckedException(e);
+        LOG.log(Level.WARNING, "Couldn't close socket", e);
       }
     }
 
@@ -123,11 +127,20 @@ public class CoverageMinion {
   }
 
   private static void enableTransformations(Predicate<String> filter) {
-    ClientPluginServices plugins = ClientPluginServices.makeForContextLoader();
-    for (TransformationPlugin each : plugins.findTransformations()) {
+    for (TransformationPlugin each : TRANSFORMATION_PLUGINS) {
       ClassFileTransformer transformer = each.makeCoverageTransformer(filter);
       if (transformer != null) {
         HotSwapAgent.addTransformer(transformer);
+      }
+    }
+  }
+
+  private static void notifyCoverageFinished() {
+    for (TransformationPlugin each : TRANSFORMATION_PLUGINS) {
+      try {
+        each.coverageFinished();
+      } catch (final Throwable ex) {
+        LOG.log(Level.WARNING, "Coverage cleanup hook failed for " + each.getClass().getName(), ex);
       }
     }
   }

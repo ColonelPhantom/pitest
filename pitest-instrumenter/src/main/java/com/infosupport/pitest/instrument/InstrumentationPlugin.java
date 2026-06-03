@@ -49,7 +49,7 @@ public class InstrumentationPlugin implements TransformationPlugin, EnvironmentR
         mkdir("cov-classes");
 
         try {
-            Logger.setOutput(new FileOutputStream("target/pit-instrument/clean-log.xml", false));
+            Logger.setOutput(new FileOutputStream("target/pit-instrument/clean-log.xml.gz", false));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -76,5 +76,10 @@ public class InstrumentationPlugin implements TransformationPlugin, EnvironmentR
         }
 
         return new InstrumentationResetter(instrumenter);
+    }
+
+    @Override
+    public void coverageFinished() {
+        Logger.close();
     }
 }

@@ -69,7 +69,7 @@ public class TestCarver implements MutationResultListener {
         }
 
         this.logParser = new LogParser(this.xstream);
-        this.cleanRuns = logParser.parseLogFile(new File(CARVE_DIR, "clean-log.xml"));
+        this.cleanRuns = logParser.parseLogFile(new File(CARVE_DIR, "clean-log.xml.gz"));
     }
 
     @Override
@@ -122,7 +122,7 @@ public class TestCarver implements MutationResultListener {
 
                 ArrayList<File> xmlFiles = new ArrayList<>();
 
-                File xmlFile = new File("target/pit-instrument/mutants/" + id + "/instrument-log.xml");
+                File xmlFile = new File("target/pit-instrument/mutants/" + id + "/instrument-log.xml.gz");
                 if (xmlFile.exists()) {
                     xmlFiles.add(xmlFile);
                 } else {
@@ -141,7 +141,7 @@ public class TestCarver implements MutationResultListener {
                         );
                         String subIdStr = MutantHash.idString(subDetails);
                         String subHash = MutantHash.hash(subDetails);
-                        File subXmlFile = new File("target/pit-instrument/mutants/" + subHash + "/instrument-log.xml");
+                        File subXmlFile = new File("target/pit-instrument/mutants/" + subHash + "/instrument-log.xml.gz");
                         if (subXmlFile.exists()) {
                             xmlFiles.add(subXmlFile);
                         } else {
@@ -241,9 +241,9 @@ public class TestCarver implements MutationResultListener {
                 log.write(("        Warning: Could not resolve target method for " + classNameDot + "::" + mutantCall.methodName + "\n").getBytes());
                 return;
             }
-            Class<?>[] paramTypes = targetMethod != null ? targetMethod.getParameterTypes() : new Class<?>[0];
-            List<String> paramNames = targetMethod != null ? extractParamNames(targetMethod) : null;
-            Class<?> returnType = targetMethod != null ? targetMethod.getReturnType() : null;
+            Class<?>[] paramTypes = targetMethod.getParameterTypes();
+            List<String> paramNames = extractParamNames(targetMethod);
+            Class<?> returnType = targetMethod.getReturnType();
 
             boolean exceptionDiff = !deserializedEqual(cleanCall.exception, mutantCall.exception);
             boolean returnDiff = !deserializedEqual(cleanCall.returnValue, mutantCall.returnValue);

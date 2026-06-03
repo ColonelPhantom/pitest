@@ -20,4 +20,11 @@ public interface TransformationPlugin extends ClientClasspathPlugin {
         return null;
     }
 
+    /**
+     * Called once the coverage minion has finished executing all tests.
+     */
+    default void coverageFinished() {
+        // default no-op
+    }
+
 }

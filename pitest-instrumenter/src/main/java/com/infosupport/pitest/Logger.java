@@ -7,9 +7,11 @@ import org.pitest.reloc.xstream.io.xml.XppDriver;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.zip.GZIPOutputStream;
 
 class Xml11Driver extends XppDriver {
     @Override
@@ -19,9 +21,22 @@ class Xml11Driver extends XppDriver {
 }
 
 public class Logger {
-    private static FileOutputStream out;
+    private static OutputStream out;
     private final static XStream xstream = new XStream(new Xml11Driver());
 
+
+    public static void close() {
+        if (Logger.out == null) {
+            return;
+        }
+        try {
+            Logger.out.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            Logger.out = null;
+        }
+    }
 
     public static void setOutput(final FileOutputStream out) {
         if (Logger.out != null) {
@@ -31,7 +46,11 @@ public class Logger {
                 throw new RuntimeException(e);
             }
         }
-        Logger.out = out;
+        try {
+            Logger.out = new GZIPOutputStream(out, true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static String escapeXml(String input) {

@@ -11,6 +11,7 @@ import java.io.*;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 public class LogParser {
     private final XStream xstream;
@@ -109,12 +110,14 @@ public class LogParser {
                                 .filter(File::exists)
                                 .map(file -> {
                                     try {
-                                        return (InputStream)new FileInputStream(file);
-                                    } catch (FileNotFoundException e) {
-                                        throw new RuntimeException("File not found: " + file, e);
+                                        FileInputStream fileIn = new FileInputStream(file);
+                                        GZIPInputStream gzIn = new GZIPInputStream(fileIn);
+                                        return (InputStream)gzIn;
+                                    } catch (IOException e) {
+                                        throw new RuntimeException("Error opening file: " + file, e);
                                     }
                                 })
-                                .reduce((a, b) -> new SequenceInputStream(a, b))
+                                .reduce(SequenceInputStream::new)
                                 .orElse(new ByteArrayInputStream(new byte[0])),
                         new ByteArrayInputStream("</roots>".getBytes())
                 )
