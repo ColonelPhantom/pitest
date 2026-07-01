@@ -23,6 +23,7 @@ class Xml11Driver extends XppDriver {
 public class Logger {
     private static OutputStream out;
     private final static XStream xstream = new XStream(new Xml11Driver());
+    private static String test = null;
 
 
     public static void close() {
@@ -95,7 +96,9 @@ public class Logger {
 
     public static void logCall(String clazz, String method, Object self, Object[] parameters) {
         if (out == null) {
-            System.out.println("Logger not initialized, cannot log call to " + clazz + "::" + method);
+            return;
+        }
+        if (test == null) {
             return;
         }
 
@@ -115,6 +118,9 @@ public class Logger {
         if (out == null) {
             return;
         }
+        if (test == null) {
+            return;
+        }
         try {
             writeObject("return", returnValue);
             writeObject("selfAfter", self);
@@ -126,6 +132,9 @@ public class Logger {
 
     public static void logException(Object self, Throwable exception) {
         if (out == null) {
+            return;
+        }
+        if (test == null) {
             return;
         }
         System.out.println("Exception in method call: " + exception);
@@ -140,6 +149,7 @@ public class Logger {
 
     public static void startTest(String testName) {
         if (out == null) return;
+        test = testName;
         try {
             out.write(("<test name=\"" + escapeXml(testName) + "\">\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
         } catch (IOException e) {
@@ -149,6 +159,7 @@ public class Logger {
 
     public static void endTest() {
         if (out == null) return;
+        test = null;
         try {
             out.write("</test>\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
         } catch (IOException e) {
