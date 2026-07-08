@@ -166,20 +166,20 @@ public class TestCarver implements MutationResultListener {
                     }
 
                     for (MethodCall mutantCall : mutantTestRun.calls) {
-                        log.write(("      Mutant MethodCall: " + mutantCall.className + "::" + mutantCall.methodName + "\n").getBytes());
-                        log.write(("        self: " + mutantCall.self + "\n").getBytes());
-                        for (int i = 0; i < mutantCall.args.size(); i++) {
-                            log.write(("        arg " + i + ": " + mutantCall.args.get(i) + "\n").getBytes());
-                        }
-                        if (mutantCall.returnValue != null) {
-                            log.write(("        return: " + mutantCall.returnValue + "\n").getBytes());
-                        }
-                        if (mutantCall.exception != null) {
-                            log.write(("        except: " + mutantCall.exception + "\n").getBytes());
-                        }
-                        if (mutantCall.selfAfter != null) {
-                            log.write(("        selfAfter: " + mutantCall.selfAfter + "\n").getBytes());
-                        }
+//                        log.write(("      Mutant MethodCall: " + mutantCall.className + "::" + mutantCall.methodName + "\n").getBytes());
+//                        log.write(("        self: " + mutantCall.self + "\n").getBytes());
+//                        for (int i = 0; i < mutantCall.args.size(); i++) {
+//                            log.write(("        arg " + i + ": " + mutantCall.args.get(i) + "\n").getBytes());
+//                        }
+//                        if (mutantCall.returnValue != null) {
+//                            log.write(("        return: " + mutantCall.returnValue + "\n").getBytes());
+//                        }
+//                        if (mutantCall.exception != null) {
+//                            log.write(("        except: " + mutantCall.exception + "\n").getBytes());
+//                        }
+//                        if (mutantCall.selfAfter != null) {
+//                            log.write(("        selfAfter: " + mutantCall.selfAfter + "\n").getBytes());
+//                        }
 
                         boolean found = false;
                         int callIndex = 0;
@@ -187,7 +187,7 @@ public class TestCarver implements MutationResultListener {
                             callIndex++;
                             if (mutantCall.matchesInput(cleanCall)) {
                                 boolean distinguishable = mutantCall.distinguishable(cleanCall);
-                                log.write(("        Found matching clean call. Distinguishable? " + distinguishable + "\t" + cleanCall + "\n").getBytes());
+//                                log.write(("        Found matching clean call. Distinguishable? " + distinguishable + "\t" + cleanCall + "\n").getBytes());
                                 if (distinguishable) {
                                     generateTest(mutantCall, cleanCall, id, testName, callIndex);
                                 }
@@ -195,7 +195,7 @@ public class TestCarver implements MutationResultListener {
                             }
                         }
                         if (!found) {
-                            log.write(("        No matching clean call found.\n").getBytes());
+//                            log.write(("        No matching clean call found.\n").getBytes());
                         }
                     }
                 }
