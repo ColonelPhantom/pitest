@@ -15,6 +15,8 @@ import java.util.zip.GZIPInputStream;
 
 public class LogParser {
     private final XStream xstream;
+    private final Map<String, DeserializedObject> objectCache = new LinkedHashMap<>();
+
 
     public LogParser(XStream xstream) {
         this.xstream = xstream;
@@ -149,23 +151,28 @@ public class LogParser {
                     } else if ("self".equals(nodeName)) {
                         String hash = reader.getAttributeValue(null, "hash");
                         StaxReader staxReader = new StaxReader(new QNameMap(), reader);
-                        callStack.peek().self = new DeserializedObject(xstream.unmarshal(staxReader), hash);
+                        Object deserializedObject = xstream.unmarshal(staxReader);
+                        callStack.peek().self = this.objectCache.computeIfAbsent(hash, h -> new DeserializedObject(deserializedObject, h));
                     } else if ("arg".equals(nodeName)) {
                         String hash = reader.getAttributeValue(null, "hash");
                         StaxReader staxReader = new StaxReader(new QNameMap(), reader);
-                        callStack.peek().args.add(new DeserializedObject(xstream.unmarshal(staxReader), hash));
+                        Object deserializedObject = xstream.unmarshal(staxReader);
+                        callStack.peek().args.add(this.objectCache.computeIfAbsent(hash, h -> new DeserializedObject(deserializedObject, h)));
                     } else if ("return".equals(nodeName)) {
                         String hash = reader.getAttributeValue(null, "hash");
                         StaxReader staxReader = new StaxReader(new QNameMap(), reader);
-                        callStack.peek().returnValue = new DeserializedObject(xstream.unmarshal(staxReader), hash);
+                        Object deserializedObject = xstream.unmarshal(staxReader);
+                        callStack.peek().returnValue = this.objectCache.computeIfAbsent(hash, h -> new DeserializedObject(deserializedObject, h));
                     } else if ("except".equals(nodeName)) {
                         String hash = reader.getAttributeValue(null, "hash");
                         StaxReader staxReader = new StaxReader(new QNameMap(), reader);
-                        callStack.peek().exception = new DeserializedObject(xstream.unmarshal(staxReader), hash);
+                        Object deserializedObject = xstream.unmarshal(staxReader);
+                        callStack.peek().exception = this.objectCache.computeIfAbsent(hash, h -> new DeserializedObject(deserializedObject, h));
                     } else if ("selfAfter".equals(nodeName)) {
                         String hash = reader.getAttributeValue(null, "hash");
                         StaxReader staxReader = new StaxReader(new QNameMap(), reader);
-                        callStack.peek().selfAfter = new DeserializedObject(xstream.unmarshal(staxReader), hash);
+                        Object deserializedObject = xstream.unmarshal(staxReader);
+                        callStack.peek().selfAfter = this.objectCache.computeIfAbsent(hash, h -> new DeserializedObject(deserializedObject, h));
                     }
                 } else if (event == XMLStreamConstants.END_ELEMENT) {
                     if ("methodCall".equals(reader.getLocalName())) {
