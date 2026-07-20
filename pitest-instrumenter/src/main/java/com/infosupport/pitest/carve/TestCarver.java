@@ -96,8 +96,11 @@ public class TestCarver implements MutationResultListener {
                 }
             }
             log.write(("----------------------------\n").getBytes());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Throwable t) {
+            try {
+                log.write(("Error writing clean calls to log: " + t.getMessage() + "\n").getBytes());
+                log.write(("----------------------------\n").getBytes());
+            } catch (IOException ignored) {}
         }
     }
 
