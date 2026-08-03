@@ -74,34 +74,34 @@ public class TestCarver implements MutationResultListener {
 
     @Override
     public void runStart() {
-        try {
-            log.write(("--- Original Clean Calls ---\n").getBytes());
-            for (Map.Entry<String, TestRun> entry : cleanRuns.entrySet()) {
-                log.write(("  Clean Test: " + entry.getKey() + "\n").getBytes());
-                for (MethodCall call : entry.getValue().calls) {
-                    log.write(("    Clean MethodCall: " + call.className + "::" + call.methodName + "\n").getBytes());
-                    log.write(("      self: " + call.self + "\n").getBytes());
-                    for (int i = 0; i < call.args.size(); i++) {
-                        log.write(("      arg " + i + ": " + call.args.get(i) + "\n").getBytes());
-                    }
-                    if (call.returnValue != null) {
-                        log.write(("      return: " + call.returnValue + "\n").getBytes());
-                    }
-                    if (call.exception != null) {
-                        log.write(("      except: " + call.exception + "\n").getBytes());
-                    }
-                    if (call.selfAfter != null) {
-                        log.write(("      selfAfter: " + call.selfAfter + "\n").getBytes());
-                    }
-                }
-            }
-            log.write(("----------------------------\n").getBytes());
-        } catch (Throwable t) {
-            try {
-                log.write(("Error writing clean calls to log: " + t.getMessage() + "\n").getBytes());
-                log.write(("----------------------------\n").getBytes());
-            } catch (IOException ignored) {}
-        }
+//        try {
+//            log.write(("--- Original Clean Calls ---\n").getBytes());
+//            for (Map.Entry<String, TestRun> entry : cleanRuns.entrySet()) {
+//                log.write(("  Clean Test: " + entry.getKey() + "\n").getBytes());
+//                for (MethodCall call : entry.getValue().calls) {
+//                    log.write(("    Clean MethodCall: " + call.className + "::" + call.methodName + "\n").getBytes());
+//                    log.write(("      self: " + call.self + "\n").getBytes());
+//                    for (int i = 0; i < call.args.size(); i++) {
+//                        log.write(("      arg " + i + ": " + call.args.get(i) + "\n").getBytes());
+//                    }
+//                    if (call.returnValue != null) {
+//                        log.write(("      return: " + call.returnValue + "\n").getBytes());
+//                    }
+//                    if (call.exception != null) {
+//                        log.write(("      except: " + call.exception + "\n").getBytes());
+//                    }
+//                    if (call.selfAfter != null) {
+//                        log.write(("      selfAfter: " + call.selfAfter + "\n").getBytes());
+//                    }
+//                }
+//            }
+//            log.write(("----------------------------\n").getBytes());
+//        } catch (Throwable t) {
+//            try {
+//                log.write(("Error writing clean calls to log: " + t.getMessage() + "\n").getBytes());
+//                log.write(("----------------------------\n").getBytes());
+//            } catch (IOException ignored) {}
+//        }
     }
 
     @Override
@@ -168,37 +168,24 @@ public class TestCarver implements MutationResultListener {
                         continue;
                     }
 
-                    for (MethodCall mutantCall : mutantTestRun.calls) {
-//                        log.write(("      Mutant MethodCall: " + mutantCall.className + "::" + mutantCall.methodName + "\n").getBytes());
-//                        log.write(("        self: " + mutantCall.self + "\n").getBytes());
-//                        for (int i = 0; i < mutantCall.args.size(); i++) {
-//                            log.write(("        arg " + i + ": " + mutantCall.args.get(i) + "\n").getBytes());
-//                        }
-//                        if (mutantCall.returnValue != null) {
-//                            log.write(("        return: " + mutantCall.returnValue + "\n").getBytes());
-//                        }
-//                        if (mutantCall.exception != null) {
-//                            log.write(("        except: " + mutantCall.exception + "\n").getBytes());
-//                        }
-//                        if (mutantCall.selfAfter != null) {
-//                            log.write(("        selfAfter: " + mutantCall.selfAfter + "\n").getBytes());
-//                        }
-
-                        boolean found = false;
-                        int callIndex = 0;
-                        for (MethodCall cleanCall : cleanTestRun.calls) {
-                            callIndex++;
-                            if (mutantCall.matchesInput(cleanCall)) {
-                                boolean distinguishable = mutantCall.distinguishable(cleanCall);
-//                                log.write(("        Found matching clean call. Distinguishable? " + distinguishable + "\t" + cleanCall + "\n").getBytes());
-                                if (distinguishable) {
-                                    generateTest(mutantCall, cleanCall, id, testName, callIndex);
+                    for (Map.Entry<String, Map<String, List<MethodCall>>> mutantCallForClass : mutantTestRun.calls.entrySet()) {
+                        String className = mutantCallForClass.getKey();
+                        Map<String, List<MethodCall>> methodCalls = mutantCallForClass.getValue();
+                        for (Map.Entry<String, List<MethodCall>> mutantCallEntry : methodCalls.entrySet()) {
+                            String methodName = mutantCallEntry.getKey();
+                            List<MethodCall> mutantCalls = mutantCallEntry.getValue();
+                            for (MethodCall mutantCall : mutantCalls) {
+                                int callIndex = 0;
+                                for (MethodCall cleanCall : cleanTestRun.calls.get(className).get(methodName)) {
+                                    callIndex++;
+                                    if (mutantCall.matchesInput(cleanCall)) {
+                                        boolean distinguishable = mutantCall.distinguishable(cleanCall);
+                                        if (distinguishable) {
+                                            generateTest(mutantCall, cleanCall, id, testName, callIndex);
+                                        }
+                                    }
                                 }
-                                found = true;
                             }
-                        }
-                        if (!found) {
-//                            log.write(("        No matching clean call found.\n").getBytes());
                         }
                     }
                 }

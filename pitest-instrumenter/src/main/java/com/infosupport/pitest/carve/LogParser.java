@@ -24,7 +24,7 @@ public class LogParser {
 
     public static class TestRun {
         public String name;
-        public java.util.List<MethodCall> calls = new java.util.ArrayList<>();
+        public java.util.Map<String, java.util.Map<String, java.util.List<MethodCall>>> calls = new java.util.LinkedHashMap<>();
     }
 
     public static class DeserializedObject {
@@ -145,7 +145,9 @@ public class LogParser {
                         call.className = reader.getAttributeValue(null, "class");
                         call.methodName = reader.getAttributeValue(null, "method");
                         if (currentTest != null) {
-                            currentTest.calls.add(call);
+                            var classCalls = currentTest.calls.computeIfAbsent(call.className, k -> new LinkedHashMap<>());
+                            var methodCalls = classCalls.computeIfAbsent(call.methodName, k -> new java.util.ArrayList<>());
+                            methodCalls.add(call);
                         }
                         callStack.push(call);
                     } else if ("self".equals(nodeName)) {
