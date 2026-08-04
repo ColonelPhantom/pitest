@@ -156,7 +156,7 @@ public class TestCarver implements MutationResultListener {
                 Map<String, TestRun> mutantRuns = logParser.parseLogFiles(xmlFiles);
                 log.write(("  Parsed XML Logs for mutant: " + id + "\n").getBytes());
 
-                for (Map.Entry<String, TestRun> entry : mutantRuns.entrySet()) {
+                tests: for (Map.Entry<String, TestRun> entry : mutantRuns.entrySet()) {
                     String testName = entry.getKey();
                     TestRun mutantTestRun = entry.getValue();
                     TestRun cleanTestRun = this.cleanRuns.get(testName);
@@ -182,6 +182,7 @@ public class TestCarver implements MutationResultListener {
                                         boolean distinguishable = mutantCall.distinguishable(cleanCall);
                                         if (distinguishable) {
                                             generateTest(mutantCall, cleanCall, id, testName, callIndex);
+                                            break tests; // Only generate one test per mutant
                                         }
                                     }
                                 }
