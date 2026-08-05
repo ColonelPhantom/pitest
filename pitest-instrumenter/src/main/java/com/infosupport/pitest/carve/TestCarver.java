@@ -168,21 +168,28 @@ public class TestCarver implements MutationResultListener {
                         continue;
                     }
 
-                    for (Map.Entry<String, Map<String, List<MethodCall>>> mutantCallForClass : mutantTestRun.calls.entrySet()) {
+                    for (Map.Entry<String, Map<String, Map<String, List<MethodCall>>>> mutantCallForClass : mutantTestRun.calls.entrySet()) {
                         String className = mutantCallForClass.getKey();
-                        Map<String, List<MethodCall>> methodCalls = mutantCallForClass.getValue();
-                        for (Map.Entry<String, List<MethodCall>> mutantCallEntry : methodCalls.entrySet()) {
+                        Map<String, Map<String, List<MethodCall>>> methodCalls = mutantCallForClass.getValue();
+                        for (Map.Entry<String, Map<String, List<MethodCall>>> mutantCallEntry : methodCalls.entrySet()) {
                             String methodName = mutantCallEntry.getKey();
-                            List<MethodCall> mutantCalls = mutantCallEntry.getValue();
-                            for (MethodCall mutantCall : mutantCalls) {
-                                int callIndex = 0;
-                                for (MethodCall cleanCall : cleanTestRun.calls.get(className).get(methodName)) {
-                                    callIndex++;
-                                    if (mutantCall.matchesInput(cleanCall)) {
-                                        boolean distinguishable = mutantCall.distinguishable(cleanCall);
-                                        if (distinguishable) {
-                                            generateTest(mutantCall, cleanCall, id, testName, callIndex);
-                                            break tests; // Only generate one test per mutant
+                            Map<String, List<MethodCall>> mutantCalls = mutantCallEntry.getValue();
+                            for (List<MethodCall> hashCalls : mutantCalls.values()) {
+                                for (MethodCall mutantCall : hashCalls) {
+                                    int callIndex = 0;
+                                    var cleanCalls = cleanTestRun.calls.get(className).get(methodName).get(mutantCall.hash());
+                                    System.out.println("Comparing mutant call: " + mutantCall.className + "::" + mutantCall.methodName + " with hash: " + mutantCall.hash());
+                                    if (cleanCalls == null) {
+                                        continue;
+                                    }
+                                    for (MethodCall cleanCall : cleanTestRun.calls.get(className).get(methodName).get(mutantCall.hash())) {
+                                        callIndex++;
+                                        if (mutantCall.matchesInput(cleanCall)) {
+                                            boolean distinguishable = mutantCall.distinguishable(cleanCall);
+                                            if (distinguishable) {
+                                                generateTest(mutantCall, cleanCall, id, testName, callIndex);
+                                                break tests; // Only generate one test per mutant
+                                            }
                                         }
                                     }
                                 }

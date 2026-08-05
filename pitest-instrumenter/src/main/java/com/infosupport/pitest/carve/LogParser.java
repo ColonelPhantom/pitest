@@ -24,7 +24,7 @@ public class LogParser {
 
     public static class TestRun {
         public String name;
-        public java.util.Map<String, java.util.Map<String, java.util.List<MethodCall>>> calls = new java.util.LinkedHashMap<>();
+        public java.util.Map<String, java.util.Map<String, java.util.Map<String, java.util.List<MethodCall>>>> calls = new java.util.LinkedHashMap<>();
     }
 
     public static class DeserializedObject {
@@ -96,6 +96,19 @@ public class LogParser {
                 return true;
             }
         }
+
+        public String hash() {
+            StringBuilder sb = new StringBuilder();
+            sb.append(className).append(".").append(methodName).append("(");
+            if (self != null) {
+                sb.append(self.hash).append(",");
+            }
+            for (DeserializedObject arg : args) {
+                sb.append(arg.hash).append(",");
+            }
+            sb.append(")");
+            return sb.toString();
+        }
     }
 
     public Map<String, TestRun> parseLogFile(File xmlFile) {
@@ -144,11 +157,6 @@ public class LogParser {
                         MethodCall call = new MethodCall();
                         call.className = reader.getAttributeValue(null, "class");
                         call.methodName = reader.getAttributeValue(null, "method");
-                        if (currentTest != null) {
-                            var classCalls = currentTest.calls.computeIfAbsent(call.className, k -> new LinkedHashMap<>());
-                            var methodCalls = classCalls.computeIfAbsent(call.methodName, k -> new java.util.ArrayList<>());
-                            methodCalls.add(call);
-                        }
                         callStack.push(call);
                     } else if ("self".equals(nodeName)) {
                         String hash = reader.getAttributeValue(null, "hash");
@@ -178,6 +186,13 @@ public class LogParser {
                     }
                 } else if (event == XMLStreamConstants.END_ELEMENT) {
                     if ("methodCall".equals(reader.getLocalName())) {
+                        if (currentTest != null) {
+                            var classCalls = currentTest.calls.computeIfAbsent(callStack.peek().className, k -> new LinkedHashMap<>());
+                            var methodCalls = classCalls.computeIfAbsent(callStack.peek().methodName, k -> new java.util.LinkedHashMap<>());
+                            var hashCalls = methodCalls.computeIfAbsent(callStack.peek().hash(), k -> new java.util.ArrayList<>());
+                            System.out.println("Adding call to test " + currentTest.name + ": " + callStack.peek().hash());
+                            hashCalls.add(callStack.peek());
+                        }
                         if (!callStack.isEmpty()) callStack.pop();
                     } else if ("test".equals(reader.getLocalName())) {
                         currentTest = null;
@@ -186,6 +201,8 @@ public class LogParser {
             }
             reader.close();
         } catch (Exception e) {
+            System.err.println("Error parsing log file(s): " + xmlFiles);
+            e.printStackTrace();
             throw new RuntimeException("Error parsing log file(s): " + xmlFiles, e);
         }
         return testRuns;
