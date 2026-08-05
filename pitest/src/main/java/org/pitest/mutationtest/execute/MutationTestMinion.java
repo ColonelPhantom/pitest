@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 public class MutationTestMinion {
 
   private static final Logger       LOG = Log.getLogger();
+  private static final Collection<TransformationPlugin> TRANSFORMATION_PLUGINS = ClientPluginServices.makeForContextLoader().findTransformations();
 
   // We maintain a small cache to avoid reading byte code off disk more than once
   // Size is arbitrary but assumed to be large enough to cover likely max number of inner classes
@@ -63,6 +64,16 @@ public class MutationTestMinion {
     this.dis = dis;
     this.reporter = reporter;
     this.plugins = plugins;
+  }
+
+  private static void notifyMutationFinished() {
+    for (TransformationPlugin each : TRANSFORMATION_PLUGINS) {
+      try {
+        each.mutantFinished();
+      } catch (Throwable t) {
+        LOG.log(Level.WARNING, "Error notifying plugin of mutant finished", t);
+      }
+    }
   }
 
   public void run() {
@@ -100,6 +111,8 @@ public class MutationTestMinion {
       worker.run(paramsFromParent.mutations, this.reporter,
           new TimeOutDecoratedTestSource(paramsFromParent.timeoutStrategy,
               tests, this.reporter));
+
+      notifyMutationFinished();
 
       this.reporter.done(ExitCode.OK);
 
@@ -175,8 +188,7 @@ public class MutationTestMinion {
   }
 
   private static void enableTransformations() {
-    ClientPluginServices plugins = ClientPluginServices.makeForContextLoader();
-    for (TransformationPlugin each : plugins.findTransformations()) {
+    for (TransformationPlugin each : TRANSFORMATION_PLUGINS) {
       ClassFileTransformer transformer = each.makeMutationTransformer(null);
       if (transformer != null) {
         HotSwapAgent.addTransformer(transformer);

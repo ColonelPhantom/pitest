@@ -82,4 +82,9 @@ public class InstrumentationPlugin implements TransformationPlugin, EnvironmentR
     public void coverageFinished() {
         Logger.close();
     }
+
+    @Override
+    public void mutantFinished() {
+        Logger.close();
+    }
 }

@@ -27,4 +27,8 @@ public interface TransformationPlugin extends ClientClasspathPlugin {
         // default no-op
     }
 
+    default void mutantFinished() {
+        // default no-op
+    }
+
 }
