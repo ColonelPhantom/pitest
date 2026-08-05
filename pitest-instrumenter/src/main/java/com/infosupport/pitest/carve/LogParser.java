@@ -190,7 +190,6 @@ public class LogParser {
                             var classCalls = currentTest.calls.computeIfAbsent(callStack.peek().className, k -> new LinkedHashMap<>());
                             var methodCalls = classCalls.computeIfAbsent(callStack.peek().methodName, k -> new java.util.LinkedHashMap<>());
                             var hashCalls = methodCalls.computeIfAbsent(callStack.peek().hash(), k -> new java.util.ArrayList<>());
-                            System.out.println("Adding call to test " + currentTest.name + ": " + callStack.peek().hash());
                             hashCalls.add(callStack.peek());
                         }
                         if (!callStack.isEmpty()) callStack.pop();

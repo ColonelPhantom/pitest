@@ -178,7 +178,6 @@ public class TestCarver implements MutationResultListener {
                                 for (MethodCall mutantCall : hashCalls) {
                                     int callIndex = 0;
                                     var cleanCalls = cleanTestRun.calls.get(className).get(methodName).get(mutantCall.hash());
-                                    System.out.println("Comparing mutant call: " + mutantCall.className + "::" + mutantCall.methodName + " with hash: " + mutantCall.hash());
                                     if (cleanCalls == null) {
                                         continue;
                                     }
