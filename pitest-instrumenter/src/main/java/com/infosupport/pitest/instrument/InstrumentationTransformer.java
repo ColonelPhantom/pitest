@@ -67,34 +67,40 @@ class InstrumentationTransformer implements ClassFileTransformer {
                             String className, Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain,
                             byte[] classfileBuffer) {
-        if (classFilter == null || !classFilter.test(className.replace("/", "."))) {
-            return null;
-        }
-
-        System.out.println("Transforming class " + className);
-
-        byte[] result;
         try {
-            ClassReader cr = new ClassReader(classfileBuffer);
-            ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_FRAMES);
-            ClassVisitor cv = new InstrumentationClassVisitor(cw, methodFilter);
-            cr.accept(cv, ClassReader.EXPAND_FRAMES);
-            result = cw.toByteArray();
-            System.out.println("Before: " + Arrays.hashCode(classfileBuffer) + ", after: " + Arrays.hashCode(result));
+            if (classFilter == null || !classFilter.test(className.replace("/", "."))) {
+                return null;
+            }
+
+            System.out.println("Transforming class " + className);
+
+            byte[] result;
+            try {
+                ClassReader cr = new ClassReader(classfileBuffer);
+                ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_FRAMES);
+                ClassVisitor cv = new InstrumentationClassVisitor(cw, methodFilter);
+                cr.accept(cv, ClassReader.EXPAND_FRAMES);
+                result = cw.toByteArray();
+                System.out.println("Before: " + Arrays.hashCode(classfileBuffer) + ", after: " + Arrays.hashCode(result));
+            } catch (Throwable e) {
+                System.out.println("Transforming class " + className + " failed: " + e.getMessage());
+                e.printStackTrace();
+                throw e;
+            }
+
+            try {
+                FileOutputStream out = new FileOutputStream(basePath() + className.replace("/", ".") + ".class", false);
+                out.write(result);
+                out.close();
+            } catch (IOException e) {
+                System.out.println("Failed to write transformed class " + e);
+            }
+            System.out.println("Transformed class " + className + " - size " + result.length);
+            return result;
         } catch (Throwable e) {
             System.out.println("Transforming class " + className + " failed: " + e.getMessage());
             e.printStackTrace();
-            throw e;
+            return null;
         }
-
-        try {
-            FileOutputStream out = new FileOutputStream(basePath() + className.replace("/", ".") + ".class", false);
-            out.write(result);
-            out.close();
-        } catch (IOException e) {
-            System.out.println("Failed to write transformed class " + e);
-        }
-        System.out.println("Transformed class " + className + " - size "  + result.length);
-        return result;
     }
 }
