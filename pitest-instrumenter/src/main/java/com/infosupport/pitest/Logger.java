@@ -24,6 +24,7 @@ public class Logger {
     private static OutputStream out;
     private final static XStream xstream = new XStream(new Xml11Driver());
     private static String test = null;
+    private final static ThreadLocal<Boolean> serializing = ThreadLocal.withInitial(() -> false);
 
 
     public static void close() {
@@ -83,7 +84,13 @@ public class Logger {
         String xml;
         String hash;
         try {
-            xml = xstream.toXML(obj);
+            if (!serializing.get()) {
+                serializing.set(true);
+                xml = xstream.toXML(obj);
+                serializing.set(false);
+            } else {
+                throw new RuntimeException("Recursive serialization detected for node: " + nodeName);
+            }
         } catch (Exception e) {
             xml = xstream.toXML(null);
         }
